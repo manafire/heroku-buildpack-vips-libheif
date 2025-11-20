@@ -19,7 +19,7 @@ font file support with fontconfig: true
 EXIF metadata support with libexif: true
 JPEG load/save with libjpeg: true
 JXL load/save with libjxl: false (dynamic module: false)
-JPEG2000 load/save with OpenJPEG: false
+JPEG2000 load/save with OpenJPEG: true
 PNG load/save with libspng: true
 PNG load/save with libpng: false
 selected quantisation package: imagequant
