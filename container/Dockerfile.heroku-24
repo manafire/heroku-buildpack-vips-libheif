@@ -42,7 +42,9 @@ RUN apt-get install -y \
   liborc-0.4-dev \
   libarchive-dev \
   libcgif-dev \
-  libheif-dev
+  libde265-dev \
+  libaom-dev \
+  cmake
 
 WORKDIR /usr/local/src
 
@@ -68,6 +70,20 @@ RUN wget ${ORC_URL}/orc-${ORC_VERSION}.tar.xz \
   && ninja -C builddir \
   && ninja -C builddir install
 
+# Build libheif from source for iOS 18 HEIC compatibility.
+# System libheif on heroku-24 is ~1.17.x, which is too old.
+# Requires >= 1.18.2, see https://github.com/libvips/libvips/issues/4169
+ARG LIBHEIF_VERSION=1.19.8
+ARG LIBHEIF_URL=https://github.com/strukturag/libheif/releases/download
+
+RUN wget ${LIBHEIF_URL}/v${LIBHEIF_VERSION}/libheif-${LIBHEIF_VERSION}.tar.gz \
+  && tar xf libheif-${LIBHEIF_VERSION}.tar.gz \
+  && cd libheif-${LIBHEIF_VERSION} \
+  && mkdir build && cd build \
+  && cmake .. -DCMAKE_INSTALL_PREFIX=${PREFIX} -DCMAKE_BUILD_TYPE=Release \
+  && make -j$(nproc) \
+  && make install
+
 ARG VIPS_VERSION=8.17.3
 ARG VIPS_URL=https://github.com/libvips/libvips/archive/refs/tags
 
@@ -86,6 +102,8 @@ RUN wget ${VIPS_URL}/v${VIPS_VERSION}/v${VIPS_VERSION}.tar.gz \
   -Dmodules=disabled \
   # allows omitting gobject-introspection library \
   -Dintrospection=disabled \
+  # ensure HEIF support links against our source-built libheif \
+  -Dheif=enabled \
   && cd build \
   && meson compile \
   && meson install
